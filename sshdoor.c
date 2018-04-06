@@ -1,3 +1,6 @@
+#define _GNU_SOURCE
+#define __USE_GNU
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +9,6 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#define __USE_GNU
 #include <dlfcn.h>
 
 static const char trigger[] = "SSH-2.0-";
@@ -15,16 +16,20 @@ static char *(program[]) = { "nc", "-q0", "localhost", "2222", NULL };
 static struct timeval timeout = { .tv_sec = 1, .tv_usec = 0 };
 
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
-    static int (*_accept)(int, struct sockaddr *, socklen_t *) = NULL;
+    return accept4(sockfd, addr, addrlen, 0);
+}
+
+int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) {
+    static int (*_accept)(int, struct sockaddr *, socklen_t *, int) = NULL;
     char buf[sizeof(trigger)];
     struct timeval saved_timeout; 
     socklen_t saved_len = sizeof(saved_timeout);
 
     if (!_accept)
-        _accept = dlsym(RTLD_NEXT, "accept");   
+        _accept = dlsym(RTLD_NEXT, "accept4");
 
     for(;;) {
-        int r = _accept(sockfd, addr, addrlen);
+        int r = _accept(sockfd, addr, addrlen, flags);
         pid_t p;
 
         if (r < 0 ||
